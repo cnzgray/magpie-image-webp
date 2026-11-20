@@ -36,7 +36,7 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
 {
   "spec": "/absolute/path/to/image-webp.hooks.mjs",
   "options": {
-    "agents": ["dsh"],
+    "agents": ["dsh", "codex"],
     "width": 1600,
     "quality": 85,
     "max": 4,
@@ -53,7 +53,7 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
 
 | 选项 | 默认 | 说明 |
 |---|---|---|
-| `agents` | `["dsh"]` | 生效的 agent；空数组表示全部 |
+| `agents` | `["dsh", "codex"]` | 生效的 agent；空数组表示全部 |
 | `width` | `1600` | 最大宽度（px），只会缩小，不会放大 |
 | `quality` | `85` | WebP 质量，1–100 |
 | `max` | `4` | 每请求最多处理几张图 |

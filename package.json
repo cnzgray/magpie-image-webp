@@ -37,7 +37,8 @@
     "permissions": [],
     "options": {
       "agents": [
-        "dsh"
+        "dsh",
+        "codex"
       ],
       "width": 1600,
       "quality": 85,

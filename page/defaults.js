@@ -3,7 +3,7 @@
 // 必须是普通脚本：magpie 的页面跑在 sandbox="allow-scripts" 的 iframe 里，
 // ES module 在不透明 origin 下会被拒绝加载。
 globalThis.IMAGE_WEBP_DEFAULTS = Object.freeze({
-  agents: ["dsh"],
+  agents: ["dsh", "codex"],
   width: 1600,
   quality: 85,
   max: 4,
