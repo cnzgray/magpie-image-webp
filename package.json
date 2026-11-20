@@ -1,0 +1,45 @@
+{
+  "name": "magpie-image-webp",
+  "version": "0.1.0",
+  "description": "Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采样，减少上行字节和首 token 延迟",
+  "type": "module",
+  "files": [
+    "image-webp.hooks.mjs",
+    "lib/*.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "magpie",
+    "magpie-plugin",
+    "magpie-gateway",
+    "magpie-hooks",
+    "webp",
+    "image-compression"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cnzgray/magpie-image-webp.git"
+  },
+  "homepage": "https://github.com/cnzgray/magpie-image-webp",
+  "magpie": {
+    "hooks": "./image-webp.hooks.mjs",
+    "options": {
+      "agents": [
+        "dsh"
+      ],
+      "width": 1600,
+      "quality": 85,
+      "max": 4,
+      "min": 131072,
+      "gatewayTimeoutMs": 5000
+    }
+  },
+  "engines": {
+    "bun": ">=1.4.2"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}
