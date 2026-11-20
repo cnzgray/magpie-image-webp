@@ -22,6 +22,7 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 - 只处理 `agents` 列出的 agent；`agents: []` 表示全部。
 - 任何异常、编码器缺失、超时都 fail-open：请求原样转发。
 - 改完的图片统一在全部压缩结束后写回请求体，不会留下半改状态。
+- 内置 WASM 后端目前只解码 PNG；机器上只有 WASM 时，JPEG 图片原样跳过。sharp 与 cwebp 路径两种格式都支持。
 
 当前不支持 Anthropic 的 `source.data` 与 Gemini 的 `inlineData.data`（它们的 base64 不是 data URL，替换时还要改 `media_type` / `mimeType`）。这两条路径尚未对上游做 WebP 兼容性验证，见路线图。
 
@@ -62,13 +63,14 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 
 1. **sharp**：同目录装有 `sharp` 时使用，跨平台，自带 EXIF 旋转与宽度探测。
 2. **cwebp**：PATH 里的 `cwebp`，或环境变量 `IMAGE_WEBP_CWEBP` 指定的路径。宽度由内置的 PNG/JPEG 头解析得出；未知格式不带 `-resize`，仍尝试转码。
-3. 都没有：打印一条警告并跳过，请求原样转发。
+3. **wasm**：随包安装的 `@jsquash/png` + `@jsquash/resize` + `@jsquash/webp`，零系统依赖；只有 PNG 解码，宽度已达标时跳过 resize，每张压缩后执行 `Bun.gc(true)`。
+4. 依赖缺失：打印一条警告并跳过，请求原样转发。
 
-默认零依赖。要用 sharp 时在 hooks 文件同目录执行 `bun add sharp`。
+`IMAGE_WEBP_BACKEND=sharp|cwebp|wasm` 可以跳过探测强制指定；不设置时自动探测。要用 sharp 加速，在 hooks 文件同目录执行 `bun add sharp`。
 
 ## WASM 后端实测
 
-2026-11-20 在 Bun 1.4.4 上验证 `@jsquash/png` + `@jsquash/resize` + `@jsquash/webp`（1.5.0 / 3.1.1 / 2.1.1），尚未接入 `lib/backends.mjs`。单张图片，q85，Apple Silicon：
+已接入 `lib/backends.mjs`（仅 PNG）。2026-11-20 在 Bun 1.4.4 上验证 `@jsquash/png` + `@jsquash/resize` + `@jsquash/webp`（1.5.0 / 3.1.1 / 2.1.1），单张图片，q85，Apple Silicon：
 
 | 样本 | WASM 冷 / 热 | sharp | cwebp | 输出 | WASM 峰值 RSS |
 |---|---|---|---|---|---|
@@ -81,7 +83,7 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 - 宽度已达标时调用 resize 仍需 117–125 ms，后端必须跳过同宽 resize。
 - 不加干预时 RSS 每张上涨约 40 MB（2560）或 10 MB（1600）；每轮调用 `Bun.gc(true)` 后稳定在 296 MB / 118 MB，单次 GC 约 18 ms，相对 450 ms 的压缩成本可忽略。
 
-结论：WASM 可以作为默认后端，但需要配合 GC 与 resize 跳过；sharp 仍是快 1.7 倍、省 2.8 倍内存的可选加速。
+结论：WASM 是默认后端（零系统依赖），已带 GC 与 resize 跳过；sharp 仍是快 1.7 倍、省 2.8 倍内存的可选加速。
 
 ## 开发
 
@@ -89,10 +91,11 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 bun test
 ```
 
-测试用确定性噪声生成 PNG，并像网关一样直接调用 `onRequest`。压缩相关用例在缺少 `cwebp` 与 `sharp` 的机器上跳过。
+测试用确定性噪声生成 PNG，并像网关一样直接调用 `onRequest`；`test/wasm.test.mjs` 会在独立进程里强制 WASM 后端跑一遍冷启动路径。
 
 ## 路线图
 
+- [ ] WASM 后端用 `@jsquash/jpeg` 解码 JPEG
 - [ ] `lib/protocols.mjs` 增加 Anthropic / Gemini 图片字段，先补 `cases.json` 再实现
 - [ ] 上游 WebP 兼容矩阵：yescode、Gemini、Anthropic 原生路径各测一次，必要时按 provider 回退 JPEG
 - [ ] 按 sha256 前缀的 LRU 缓存，避免历史图每轮重压

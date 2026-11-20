@@ -14,7 +14,7 @@ export async function onRequest(body, ctx) {
 
     const backend = await getBackend();
     if (!backend) {
-      console.warn("[image-webp] no encoder: install sharp or put cwebp on PATH");
+      console.warn("[image-webp] no encoder: install dependencies, sharp, or put cwebp on PATH");
       return undefined;
     }
 
@@ -23,6 +23,7 @@ export async function onRequest(body, ctx) {
       if (ctx?.signal?.aborted) break;
       try {
         const out = await backend.compress(job.bytes, {
+          mime: job.mime,
           width: options.width,
           quality: options.quality,
           signal: ctx?.signal,
