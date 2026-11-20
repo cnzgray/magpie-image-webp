@@ -17,14 +17,15 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 
 ## 行为
 
-- 只改 `data:image/...;base64,...` 形式的图片，覆盖 chat 和 responses 两种协议的请求体。
+- 覆盖 chat 与 responses 的 `data:image/...;base64,...`，以及 Anthropic 的 `source.data`（同时改写 `media_type`）和 Gemini 的 `inlineData.data` / `inline_data.data`（同时改写 `mimeType` / `mime_type`，保留原有命名风格）。
+- Anthropic 的 `url` 来源与 Gemini 的 `fileData` 是非内联引用，原样保留。
 - 已压缩更大时保留原图；单张小于 `min` 字节的图不处理。
 - 只处理 `agents` 列出的 agent；`agents: []` 表示全部。
 - 任何异常、编码器缺失、超时都 fail-open：请求原样转发。
 - 改完的图片统一在全部压缩结束后写回请求体，不会留下半改状态。
 - 内置 WASM 后端目前只解码 PNG；机器上只有 WASM 时，JPEG 图片原样跳过。sharp 与 cwebp 路径两种格式都支持。
 
-当前不支持 Anthropic 的 `source.data` 与 Gemini 的 `inlineData.data`（它们的 base64 不是 data URL，替换时还要改 `media_type` / `mimeType`）。这两条路径尚未对上游做 WebP 兼容性验证，见路线图。
+Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线图；在此之前建议先只对已确认的 provider 打开。
 
 ## 安装
 
@@ -91,13 +92,12 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 bun test
 ```
 
-测试用确定性噪声生成 PNG，并像网关一样直接调用 `onRequest`；`test/wasm.test.mjs` 会在独立进程里强制 WASM 后端跑一遍冷启动路径。
+测试用确定性噪声生成 PNG，并像网关一样直接调用 `onRequest`；`cases.json` 按协议列出结构用例（由 `test/cases.test.mjs` 驱动），`test/wasm.test.mjs` 会在独立进程里强制 WASM 后端跑一遍冷启动路径。
 
 ## 路线图
 
-- [ ] WASM 后端用 `@jsquash/jpeg` 解码 JPEG
-- [ ] `lib/protocols.mjs` 增加 Anthropic / Gemini 图片字段，先补 `cases.json` 再实现
 - [ ] 上游 WebP 兼容矩阵：yescode、Gemini、Anthropic 原生路径各测一次，必要时按 provider 回退 JPEG
+- [ ] WASM 后端用 `@jsquash/jpeg` 解码 JPEG
 - [ ] 按 sha256 前缀的 LRU 缓存，避免历史图每轮重压
 - [ ] 图形化 options 表单（page 插件）
 - [ ] 发布 npm，并提 PR 到 `magpie-community/plugins`（命名为 `@magpie-community/gateway-image-webp`）

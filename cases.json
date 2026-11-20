@@ -1,0 +1,167 @@
+[
+  {
+    "name": "anthropic base64 image gets webp data and media_type",
+    "protocol": "anthropic",
+    "body": {
+      "model": "claude-sonnet-4",
+      "max_tokens": 1024,
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            { "type": "text", "text": "what is this" },
+            {
+              "type": "image",
+              "source": { "type": "base64", "media_type": "image/png", "data": "$base64" }
+            }
+          ]
+        }
+      ]
+    },
+    "expect_changed": true,
+    "expect_images": [
+      {
+        "kind": "anthropic",
+        "data": "messages.0.content.1.source.data",
+        "mime": "messages.0.content.1.source.media_type"
+      }
+    ],
+    "expect_same": ["messages.0.content.0.text", "messages.0.content.1.source.type"]
+  },
+  {
+    "name": "anthropic image already webp is left alone",
+    "protocol": "anthropic",
+    "body": {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "image",
+              "source": { "type": "base64", "media_type": "image/webp", "data": "$base64" }
+            }
+          ]
+        }
+      ]
+    },
+    "expect_changed": false,
+    "expect_same": ["messages.0.content.0.source.data", "messages.0.content.0.source.media_type"]
+  },
+  {
+    "name": "anthropic url image is left alone",
+    "protocol": "anthropic",
+    "body": {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "image",
+              "source": { "type": "url", "url": "https://example.com/shot.png" }
+            }
+          ]
+        }
+      ]
+    },
+    "expect_changed": false,
+    "expect_same": ["messages.0.content.0.source.url"]
+  },
+  {
+    "name": "gemini inlineData gets webp data and camelCase mimeType",
+    "protocol": "gemini",
+    "body": {
+      "contents": [
+        {
+          "role": "user",
+          "parts": [
+            { "inlineData": { "mimeType": "image/png", "data": "$base64" } },
+            { "text": "describe this" }
+          ]
+        }
+      ]
+    },
+    "expect_changed": true,
+    "expect_images": [
+      {
+        "kind": "gemini",
+        "data": "contents.0.parts.0.inlineData.data",
+        "mime": "contents.0.parts.0.inlineData.mimeType"
+      }
+    ],
+    "expect_same": ["contents.0.parts.1.text"]
+  },
+  {
+    "name": "gemini inline_data keeps snake_case fields",
+    "protocol": "gemini",
+    "body": {
+      "contents": [
+        {
+          "role": "user",
+          "parts": [{ "inline_data": { "mime_type": "image/png", "data": "$base64" } }]
+        }
+      ]
+    },
+    "expect_changed": true,
+    "expect_images": [
+      {
+        "kind": "gemini",
+        "data": "contents.0.parts.0.inline_data.data",
+        "mime": "contents.0.parts.0.inline_data.mime_type"
+      }
+    ]
+  },
+  {
+    "name": "gemini fileData reference is left alone",
+    "protocol": "gemini",
+    "body": {
+      "contents": [
+        {
+          "role": "user",
+          "parts": [
+            { "fileData": { "mimeType": "image/png", "fileUri": "https://example.com/a.png" } }
+          ]
+        }
+      ]
+    },
+    "expect_changed": false,
+    "expect_same": ["contents.0.parts.0.fileData.fileUri"]
+  },
+  {
+    "name": "chat data url still converts",
+    "protocol": "chat",
+    "body": {
+      "model": "deepseek-v4.1-flash",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            { "type": "image_url", "image_url": { "url": "data:image/png;base64,$base64" } }
+          ]
+        }
+      ]
+    },
+    "expect_changed": true,
+    "expect_images": [
+      { "kind": "data_url", "data": "messages.0.content.0.image_url.url" }
+    ]
+  },
+  {
+    "name": "responses input_image data url converts",
+    "protocol": "responses",
+    "body": {
+      "model": "gpt-5",
+      "input": [
+        {
+          "role": "user",
+          "content": [
+            { "type": "input_text", "text": "and this" },
+            { "type": "input_image", "image_url": "data:image/png;base64,$base64" }
+          ]
+        }
+      ]
+    },
+    "expect_changed": true,
+    "expect_images": [{ "kind": "data_url", "data": "input.0.content.1.image_url" }],
+    "expect_same": ["input.0.content.0.text"]
+  }
+]
