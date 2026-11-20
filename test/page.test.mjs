@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEFAULTS } from "../lib/options.mjs";
-import { DEFAULTS as PAGE_DEFAULTS } from "../page/defaults.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const pageDir = join(root, "page");
@@ -12,6 +11,9 @@ const html = read("index.html");
 const js = read("app.js");
 const css = read("style.css");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+const pageScope = {};
+new Function("globalThis", read("defaults.js"))(pageScope);
+const PAGE_DEFAULTS = pageScope.IMAGE_WEBP_DEFAULTS;
 
 describe("page manifest", () => {
   test("is served from its own folder with no reads", () => {
@@ -29,6 +31,18 @@ describe("page manifest", () => {
     expect(html).not.toMatch(/<link[^>]+href="(https?:)?\/\//);
     expect(css).not.toMatch(/url\((['"]?)(https?:)?\/\//);
   });
+
+  test("uses classic scripts, since a sandboxed frame refuses modules", () => {
+    expect(html).not.toMatch(/type="module"/);
+    for (const script of [js, read("defaults.js")]) {
+      expect(script).not.toMatch(/^\s*(import|export)\b/m);
+    }
+  });
+
+  test("saves without form submission, which a sandboxed frame blocks", () => {
+    expect(html).toMatch(/<button id="save" type="button"/);
+    expect(js).not.toMatch(/addEventListener\("submit"/);
+  });
 });
 
 describe("page behaviour", () => {
@@ -36,7 +50,6 @@ describe("page behaviour", () => {
     expect(js).not.toMatch(/\bfetch\s*\(/);
     expect(js).not.toMatch(/XMLHttpRequest|WebSocket|EventSource|sendBeacon/);
     expect(js).not.toMatch(/magpie\.read\s*\(/);
-    expect(js).not.toMatch(/from\s+["'](?!\.\/)/);
   });
 
   test("every element it looks up exists", () => {

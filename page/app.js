@@ -1,7 +1,7 @@
-import { DEFAULTS } from "./defaults.mjs";
+// 普通脚本：magpie 的页面在 sandbox="allow-scripts" 的 iframe 里，ES module 会被拒绝加载。
+const DEFAULTS = globalThis.IMAGE_WEBP_DEFAULTS;
 
 const el = (id) => document.getElementById(id);
-const form = el("settings");
 const field = {
   agents: el("agent-chips"),
   agentInput: el("agent-input"),
@@ -123,8 +123,7 @@ function commitAgent() {
   updateDirty();
 }
 
-async function save(event) {
-  event.preventDefault();
+async function save() {
   if (busy) return;
   const next = normalize(collect());
   busy = true;
@@ -188,7 +187,7 @@ field.reset.addEventListener("click", () => {
   updateDirty();
 });
 
-form.addEventListener("submit", save);
+field.save.addEventListener("click", save);
 
 async function init() {
   try {
