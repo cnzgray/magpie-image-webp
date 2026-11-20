@@ -32,6 +32,22 @@ describe("page manifest", () => {
     expect(css).not.toMatch(/url\((['"]?)(https?:)?\/\//);
   });
 
+  test("declares the metadata Magpie's listing reads", () => {
+    expect(pkg.magpie.name.length).toBeLessThanOrEqual(80);
+    expect(pkg.magpie.summary.en).toBeTruthy();
+    expect(pkg.magpie.summary.zh).toBeTruthy();
+    expect(pkg.magpie.icon).toMatch(/^data:image\/svg\+xml;base64,/);
+    expect(Buffer.byteLength(pkg.magpie.icon)).toBeLessThan(1024 * 1024);
+    expect(Buffer.from(pkg.magpie.icon.split(",")[1], "base64").toString()).toBe(read("icon.svg"));
+  });
+
+  test("ships a registry entry that matches the package", () => {
+    const entry = JSON.parse(readFileSync(join(root, "community/registry-entry.json"), "utf8"));
+    expect(entry.package).toBe(pkg.name);
+    expect(entry.kind).toBe("middleware");
+    expect(entry.summary.en).toBeTruthy();
+  });
+
   test("uses classic scripts, since a sandboxed frame refuses modules", () => {
     expect(html).not.toMatch(/type="module"/);
     for (const script of [js, read("defaults.js")]) {
