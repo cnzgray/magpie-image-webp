@@ -23,7 +23,7 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 - 只处理 `agents` 列出的 agent；`agents: []` 表示全部。
 - 任何异常、编码器缺失、超时都 fail-open：请求原样转发。
 - 改完的图片统一在全部压缩结束后写回请求体，不会留下半改状态。
-- 内置 WASM 后端目前只解码 PNG；机器上只有 WASM 时，JPEG 图片原样跳过。sharp 与 cwebp 路径两种格式都支持。
+- 内置 WASM 后端解码 PNG 与 JPEG；其他格式原样跳过。sharp 与 cwebp 路径同样支持这两种格式。
 
 Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线图；在此之前建议先只对已确认的 provider 打开。
 
@@ -64,7 +64,7 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
 
 1. **sharp**：同目录装有 `sharp` 时使用，跨平台，自带 EXIF 旋转与宽度探测。
 2. **cwebp**：PATH 里的 `cwebp`，或环境变量 `IMAGE_WEBP_CWEBP` 指定的路径。宽度由内置的 PNG/JPEG 头解析得出；未知格式不带 `-resize`，仍尝试转码。
-3. **wasm**：随包安装的 `@jsquash/png` + `@jsquash/resize` + `@jsquash/webp`，零系统依赖；只有 PNG 解码，宽度已达标时跳过 resize，每张压缩后执行 `Bun.gc(true)`。
+3. **wasm**：随包安装的 `@jsquash/png` + `@jsquash/jpeg` + `@jsquash/resize` + `@jsquash/webp`，零系统依赖；解码 PNG 与 JPEG，宽度已达标时跳过 resize，每张压缩后执行 `Bun.gc(true)`。
 4. 依赖缺失：打印一条警告并跳过，请求原样转发。
 
 `IMAGE_WEBP_BACKEND=sharp|cwebp|wasm` 可以跳过探测强制指定；不设置时自动探测。要用 sharp 加速，在 hooks 文件同目录执行 `bun add sharp`。
@@ -81,6 +81,7 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
 - 冷启动的 wasm 实例化包含在首张耗时内，没有额外初始化开销。
 - 4 张 2560 图一轮耗时 1.84 s，在 5 s 预算内，但只剩约 3 s 余量。
 - 编码体积比 native 大约 5%（噪声样本）；截图样张两者一致。
+- JPEG 1600×1000 照片型样本：解码 + 编码 298 ms，2.6 MB → 1.2 MB，峰值 RSS 177 MB。
 - 宽度已达标时调用 resize 仍需 117–125 ms，后端必须跳过同宽 resize。
 - 不加干预时 RSS 每张上涨约 40 MB（2560）或 10 MB（1600）；每轮调用 `Bun.gc(true)` 后稳定在 296 MB / 118 MB，单次 GC 约 18 ms，相对 450 ms 的压缩成本可忽略。
 
@@ -97,7 +98,6 @@ bun test
 ## 路线图
 
 - [ ] 上游 WebP 兼容矩阵：yescode、Gemini、Anthropic 原生路径各测一次，必要时按 provider 回退 JPEG
-- [ ] WASM 后端用 `@jsquash/jpeg` 解码 JPEG
 - [ ] 按 sha256 前缀的 LRU 缓存，避免历史图每轮重压
 - [ ] 图形化 options 表单（page 插件）
 - [ ] 发布 npm，并提 PR 到 `magpie-community/plugins`（命名为 `@magpie-community/gateway-image-webp`）
