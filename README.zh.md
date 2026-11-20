@@ -32,7 +32,19 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
 
 ## 安装
 
-仓库尚未发布到 npm。在 Magpie 的 Plugins 页面把本仓库的 `image-webp.hooks.mjs` 加为本地 hook，或手写条目：
+不在 npm 发布。用 Magpie 的 git 规格安装：
+
+```sh
+magpie plugin add cnzgray/magpie-image-webp
+```
+
+钉住某个发布版本：
+
+```sh
+magpie plugin add cnzgray/magpie-image-webp#v0.1.0
+```
+
+Magpie 直接从本仓库安装；分支或所钉 ref 有新提交时会提示更新。也可以在 Plugins 页面添加本目录或 hooks 文件。选项保存在 `plugins.json`，设置页编辑同一份数据：
 
 ```json
 {
@@ -109,7 +121,7 @@ bun test
 ## 路线图
 
 - [ ] 上游 WebP 兼容矩阵：yescode、Gemini、Anthropic 原生路径各测一次，必要时按 provider 回退 JPEG
-- [ ] 发布 npm，并提 PR 到 `magpie-community/plugins`（命名为 `@magpie-community/gateway-image-webp`）
+- [ ] 如有需要，提 PR 到 `magpie-community/plugins`（命名为 `@magpie-community/gateway-image-webp`）
 
 ## 许可
 

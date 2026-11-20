@@ -41,13 +41,6 @@ describe("page manifest", () => {
     expect(Buffer.from(pkg.magpie.icon.split(",")[1], "base64").toString()).toBe(read("icon.svg"));
   });
 
-  test("ships a registry entry that matches the package", () => {
-    const entry = JSON.parse(readFileSync(join(root, "community/registry-entry.json"), "utf8"));
-    expect(entry.package).toBe(pkg.name);
-    expect(entry.kind).toBe("middleware");
-    expect(entry.summary.en).toBeTruthy();
-  });
-
   test("uses classic scripts, since a sandboxed frame refuses modules", () => {
     expect(html).not.toMatch(/type="module"/);
     for (const script of [js, read("defaults.js")]) {

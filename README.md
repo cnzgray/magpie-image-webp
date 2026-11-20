@@ -28,19 +28,19 @@ Requires Magpie 0.1.1273 or newer for async gateway hooks; page-saved options re
 
 ## Install
 
-From this repository:
+Install with Magpie's git spec:
 
 ```sh
 magpie plugin add cnzgray/magpie-image-webp
 ```
 
-From npm, once released:
+Pin a release with `#v0.1.0`:
 
 ```sh
-magpie plugin add magpie-image-webp
+magpie plugin add cnzgray/magpie-image-webp#v0.1.0
 ```
 
-You can also add the folder or the hooks file from Plugins. The plugin's options live in `plugins.json`; the settings page edits the same object:
+The plugin is not published to npm; Magpie installs it from this repository and shows an update when the branch or the pinned ref moves. You can also add the folder or the hooks file from Plugins. The plugin's options live in `plugins.json`; the settings page edits the same object:
 
 ```json
 {
@@ -117,7 +117,7 @@ Tests generate deterministic PNGs and call `onRequest` the way the gateway does.
 ## Roadmap
 
 - Verify upstream WebP acceptance for yescode, Gemini, and Anthropic native paths, falling back to JPEG per provider if needed.
-- Publish to npm, add a `registry.json` entry, and open a PR against `magpie-community/plugins` as `@magpie-community/gateway-image-webp`.
+- Open a PR against `magpie-community/plugins` as `@magpie-community/gateway-image-webp` if the community list wants it.
 
 ## License
 
