@@ -66,6 +66,23 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 
 默认零依赖。要用 sharp 时在 hooks 文件同目录执行 `bun add sharp`。
 
+## WASM 后端实测
+
+2026-11-20 在 Bun 1.4.4 上验证 `@jsquash/png` + `@jsquash/resize` + `@jsquash/webp`（1.5.0 / 3.1.1 / 2.1.1），尚未接入 `lib/backends.mjs`。单张图片，q85，Apple Silicon：
+
+| 样本 | WASM 冷 / 热 | sharp | cwebp | 输出 | WASM 峰值 RSS |
+|---|---|---|---|---|---|
+| 1600×1000 截图样张（58 KB PNG） | 85 / 63 ms | 42 ms | 50 ms | 12.5 KB | 143 MB |
+| 2560×1600 噪声 → 1600（16.4 MB PNG） | 516 / 461 ms | 278 ms | 280 ms | 2.5 MB | 384 MB |
+
+- 冷启动的 wasm 实例化包含在首张耗时内，没有额外初始化开销。
+- 4 张 2560 图一轮耗时 1.84 s，在 5 s 预算内，但只剩约 3 s 余量。
+- 编码体积比 native 大约 5%（噪声样本）；截图样张两者一致。
+- 宽度已达标时调用 resize 仍需 117–125 ms，后端必须跳过同宽 resize。
+- 不加干预时 RSS 每张上涨约 40 MB（2560）或 10 MB（1600）；每轮调用 `Bun.gc(true)` 后稳定在 296 MB / 118 MB，单次 GC 约 18 ms，相对 450 ms 的压缩成本可忽略。
+
+结论：WASM 可以作为默认后端，但需要配合 GC 与 resize 跳过；sharp 仍是快 1.7 倍、省 2.8 倍内存的可选加速。
+
 ## 开发
 
 ```sh
