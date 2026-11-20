@@ -23,6 +23,7 @@ Magpie 网关 hook：把请求里的内联图片转成 WebP 并按宽度降采�
 - 只处理 `agents` 列出的 agent；`agents: []` 表示全部。
 - 任何异常、编码器缺失、超时都 fail-open：请求原样转发。
 - 改完的图片统一在全部压缩结束后写回请求体，不会留下半改状态。
+- 压缩结果按「输入 sha256 前 16 位 + width + quality」进 LRU；命中后只做 base64 编码。容量按压缩后的字节数计，超出 `cacheMB` 或条数上限即淘汰最久未用的条目。
 - 内置 WASM 后端解码 PNG 与 JPEG；其他格式原样跳过。sharp 与 cwebp 路径同样支持这两种格式。
 
 Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线图；在此之前建议先只对已确认的 provider 打开。
@@ -40,6 +41,7 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
     "quality": 85,
     "max": 4,
     "min": 131072,
+    "cacheMB": 64,
     "gatewayTimeoutMs": 5000
   }
 }
@@ -56,6 +58,7 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
 | `quality` | `85` | WebP 质量，1–100 |
 | `max` | `4` | 每请求最多处理几张图 |
 | `min` | `131072` | 原图小于该字节数时跳过 |
+| `cacheMB` | `64` | 压缩结果 LRU 的字节上限（MB）；`0` 关闭 |
 | `gatewayTimeoutMs` | `5000` | 本 hook 的执行预算，magpie 侧限制在 100–30000 ms |
 
 ## 编码后端
@@ -98,7 +101,6 @@ bun test
 ## 路线图
 
 - [ ] 上游 WebP 兼容矩阵：yescode、Gemini、Anthropic 原生路径各测一次，必要时按 provider 回退 JPEG
-- [ ] 按 sha256 前缀的 LRU 缓存，避免历史图每轮重压
 - [ ] 图形化 options 表单（page 插件）
 - [ ] 发布 npm，并提 PR 到 `magpie-community/plugins`（命名为 `@magpie-community/gateway-image-webp`）
 

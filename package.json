@@ -33,6 +33,7 @@
       "quality": 85,
       "max": 4,
       "min": 131072,
+      "cacheMB": 64,
       "gatewayTimeoutMs": 5000
     }
   },

@@ -92,3 +92,19 @@ describe("webp conversion", () => {
     expect(size(low)).toBeLessThan(size(high));
   });
 });
+
+describe("cache", () => {
+  test("the second identical request is served from cache", async () => {
+    const url = dataUrl(makePng(2000, 300, 77));
+    const started = performance.now();
+    const first = await onRequest(payload(url), ctx());
+    const cold = performance.now() - started;
+    const cachedStarted = performance.now();
+    const second = await onRequest(payload(url), ctx());
+    const cached = performance.now() - cachedStarted;
+    const firstUrl = first.messages[0].content[0].image_url.url;
+    const secondUrl = second.messages[0].content[0].image_url.url;
+    expect(secondUrl).toBe(firstUrl);
+    expect(cached).toBeLessThan(cold / 3);
+  });
+});
