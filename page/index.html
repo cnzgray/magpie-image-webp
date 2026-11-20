@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图片压缩</title>
+<link rel="stylesheet" href="style.css">
+<script src="_magpie/bridge.js" defer></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<main>
+  <header class="head">
+    <img class="mark" src="icon.svg" width="30" height="30" alt="">
+    <div>
+      <h1>图片压缩</h1>
+      <p class="lede">把请求里的内联图片转成 WebP，并按宽度降采样。设置只影响下一次请求。</p>
+    </div>
+  </header>
+
+  <form id="settings" novalidate>
+    <fieldset>
+      <legend>生效范围</legend>
+      <div class="field">
+        <label for="agent-input">Agent</label>
+        <div class="chip-field" id="chip-field">
+          <ul class="chips" id="agent-chips" aria-label="已添加的 agent"></ul>
+          <input id="agent-input" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="输入名称后回车；留空表示全部 agent" aria-describedby="agent-input-help">
+        </div>
+        <small id="agent-input-help">只处理这些 agent 的请求。留空即所有 agent。</small>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>压缩</legend>
+      <div class="grid">
+        <div class="field">
+          <label for="width">最大宽度</label>
+          <div class="unit"><input id="width" type="number" min="64" max="8192" step="1" inputmode="numeric" aria-describedby="width-help"><span>px</span></div>
+          <small id="width-help">只缩小，不会放大。</small>
+        </div>
+        <div class="field">
+          <label for="max">每轮最多</label>
+          <div class="unit"><input id="max" type="number" min="1" max="32" step="1" inputmode="numeric" aria-describedby="max-help"><span>张</span></div>
+          <small id="max-help">超出的图片原样转发。</small>
+        </div>
+      </div>
+      <div class="field">
+        <label for="quality">质量 <output id="quality-out" for="quality">85</output></label>
+        <input id="quality" type="range" min="1" max="100" step="1" aria-describedby="quality-help">
+        <small id="quality-help">85 对截图通常看不出差别；文字密集时可以提到 90。</small>
+      </div>
+      <div class="field">
+        <label for="min">跳过小于</label>
+        <div class="unit"><input id="min" type="number" min="0" step="0.5" inputmode="decimal" aria-describedby="min-help"><span>KB</span></div>
+        <small id="min-help">小于该体积的原图不处理；0 表示不按体积跳过。</small>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>性能</legend>
+      <div class="grid">
+        <div class="field">
+          <label for="cache">缓存上限</label>
+          <div class="unit"><input id="cache" type="number" min="0" max="4096" step="1" inputmode="numeric" aria-describedby="cache-help"><span>MB</span></div>
+          <small id="cache-help">按压缩后的字节计，0 关闭缓存。</small>
+        </div>
+        <div class="field">
+          <label for="timeout">执行预算</label>
+          <div class="unit"><input id="timeout" type="number" min="100" max="30000" step="100" inputmode="numeric" aria-describedby="timeout-help"><span>ms</span></div>
+          <small id="timeout-help">magpie 会把值限制在 100–30000 ms。</small>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button id="reset" class="secondary" type="button">恢复默认</button>
+      <span id="status" role="status" aria-live="polite"></span>
+      <button id="save" type="submit" disabled>保存</button>
+    </div>
+  </form>
+</main>
+</body>
+</html>

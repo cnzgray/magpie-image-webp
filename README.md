@@ -61,6 +61,12 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
 | `cacheMB` | `64` | 压缩结果 LRU 的字节上限（MB）；`0` 关闭 |
 | `gatewayTimeoutMs` | `5000` | 本 hook 的执行预算，magpie 侧限制在 100–30000 ms |
 
+## 界面
+
+插件在 Plugins 分组里带一个「图片压缩」页，字段与上表一一对应：agent 列表、最大宽度、质量、每轮张数、最小体积、缓存上限和执行预算。保存后写回同一份 options，下一次请求生效（需要 Magpie 0.1.1531 或更新）；页面只通过 `magpie.options.get/set` 读写自己这一份配置。
+
+页面不声明任何读取权限，也不发网络请求；`test/page.test.mjs` 会检查脚本没有网络调用、没有未声明的 `magpie.read`，并校验页面里的默认值与 `lib/options.mjs` 一致。
+
 ## 编码后端
 
 按顺序探测，第一个可用的胜出：
@@ -101,7 +107,6 @@ bun test
 ## 路线图
 
 - [ ] 上游 WebP 兼容矩阵：yescode、Gemini、Anthropic 原生路径各测一次，必要时按 provider 回退 JPEG
-- [ ] 图形化 options 表单（page 插件）
 - [ ] 发布 npm，并提 PR 到 `magpie-community/plugins`（命名为 `@magpie-community/gateway-image-webp`）
 
 ## 许可
