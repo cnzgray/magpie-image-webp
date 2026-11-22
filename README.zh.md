@@ -32,19 +32,19 @@ Anthropic 与 Gemini 原生路径对 WebP 的接受度尚未实测，见路线�
 
 ## 安装
 
-不在 npm 发布。用 Magpie 的 git 规格安装：
+不在 npm 发布。用 Magpie 的 git 规格安装（跟随默认分支）：
 
 ```sh
 magpie plugin add cnzgray/magpie-image-webp
 ```
 
-钉住某个发布版本：
+钉住某个 commit：
 
 ```sh
-magpie plugin add cnzgray/magpie-image-webp#v0.1.0
+magpie plugin add cnzgray/magpie-image-webp#074a8f5
 ```
 
-Magpie 直接从本仓库安装；分支或所钉 ref 有新提交时会提示更新。也可以在 Plugins 页面添加本目录或 hooks 文件。选项保存在 `plugins.json`，设置页编辑同一份数据：
+Magpie 直接从本仓库安装；分支前进或所钉 commit 不同时会提示更新。别钉 annotated tag（例如 `v0.1.0`）：bun 记录的是 tag 对象 ID，而 Magpie 的更新检查比对的是 commit，结果会一直显示「有新提交」却更新不动。也可以在 Plugins 页面添加本目录或 hooks 文件。选项保存在 `plugins.json`，设置页编辑同一份数据：
 
 ```json
 {
